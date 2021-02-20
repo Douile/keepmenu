@@ -99,13 +99,15 @@ def process_config():
         DMENU_LEN, \
         ENV, \
         ENC, \
-        SEQUENCE
+        SEQUENCE, \
+        DELAY
     # pragma pylint: enable=global-variable-undefined
     ENV = os.environ.copy()
     ENV['LC_ALL'] = 'C'
     ENC = locale.getpreferredencoding()
     CACHE_PERIOD_DEFAULT_MIN = 360
     SEQUENCE = "{USERNAME}{TAB}{PASSWORD}{ENTER}"
+    DELAY = 0
     CONF = configparser.ConfigParser()
     if not exists(CONF_FILE):
         try:
@@ -124,6 +126,7 @@ def process_config():
             CONF.set('database', 'keyfile_1', '')
             CONF.set('database', 'pw_cache_period_min', str(CACHE_PERIOD_DEFAULT_MIN))
             CONF.set('database', 'autotype_default', SEQUENCE)
+            CONF.set('database', 'autotype_delay', '0.05')
             CONF.write(conf_file)
     try:
         CONF.read(CONF_FILE)
@@ -140,6 +143,8 @@ def process_config():
         DMENU_LEN = 24
     if CONF.has_option('database', 'autotype_default'):
         SEQUENCE = CONF.get("database", "autotype_default")
+    if CONF.has_option('database', 'autotype_delay'):
+        DELAY = float(CONF.get('database', 'autotype_delay'))
     if CONF.has_option("database", "type_library"):
         if CONF.get("database", "type_library") == "xdotool":
             try:
@@ -618,6 +623,8 @@ def type_entry_pynput(entry, tokens):
     kbd = keyboard.Controller()
     enter_idx = True
     for token, special in tokens:
+        if DELAY is not None:
+            time.sleep(DELAY)
         if special:
             cmd = token_command(token)
             if callable(cmd):
@@ -733,6 +740,8 @@ def type_entry_xdotool(entry, tokens):
     """
     enter_idx = True
     for token, special in tokens:
+        if DELAY is not None:
+            time.sleep(DELAY)
         if special:
             cmd = token_command(token)
             if callable(cmd):
@@ -834,6 +843,8 @@ def type_entry_ydotool(entry, tokens):
     """
     enter_idx = True
     for token, special in tokens:
+        if DELAY is not None:
+            time.sleep(DELAY)
         if special:
             cmd = token_command(token)
             if callable(cmd):
