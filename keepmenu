@@ -17,7 +17,7 @@ import shlex
 import socket
 import string
 import sys
-from subprocess import call, Popen, PIPE
+from subprocess import call, check_output, Popen, PIPE
 import tempfile
 from threading import Timer
 import time
@@ -507,6 +507,11 @@ def type_entry(entry):
         sequence = entry.autotype_sequence
     tokens = tokenize_autotype(sequence)
 
+    # Set keyboard layout
+    current_layout = str(check_output(['localectl', 'status']), 'utf-8')
+    x11_layout = re.search('X11 Layout: (.*)', current_layout).group(1)
+    
+    call(['setxkbmap', 'us'])
     library = 'pynput'
     if CONF.has_option('database', 'type_library'):
         library = CONF.get('database', 'type_library')
@@ -516,6 +521,7 @@ def type_entry(entry):
         type_entry_ydotool(entry, tokens)
     else:
         type_entry_pynput(entry, tokens)
+    call(['setxkbmap', x11_layout])
 
 
 PLACEHOLDER_AUTOTYPE_TOKENS = {
